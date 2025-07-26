@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赞赏记录提交</title>
+    <link id="favicon" rel="icon" type="image/webp" href="">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #f8f9fa;
+            color: #212529; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 1rem; 
+            -webkit-text-size-adjust: 100%;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* --- MODIFIED --- Added loader styles --- */
+        #loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f7f8fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #d24a41;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        body.loaded #loader-overlay {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .main-content {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            width: 100%; /* Ensure wrapper takes width */
+            display: flex; /* Keep content centered */
+            justify-content: center;
+            align-items: center;
+        }
+        body.loaded .main-content {
+            visibility: visible;
+            opacity: 1;
+        }
+        /* --- End of loader styles --- */
+
+        .github-corner {
+            position: fixed;
+            top: 0;
+            right: 0;
+            border: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 999;
+        }
+        .github-corner svg {
+            fill: #007bff;
+            color: #fff;
+        }
+        .github-corner:hover .octo-arm {
+            animation: octocat-wave 560ms ease-in-out;
+        }
+        @keyframes octocat-wave {
+            0%, 100% { transform: rotate(0); }
+            20%, 60% { transform: rotate(-25deg); }
+            40%, 80% { transform: rotate(10deg); }
+        }
+        .container { 
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2.5rem; 
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 420px;
+        }
+        h1 { 
+            text-align: center; 
+            color: #343a40;
+            font-size: 1.75rem;
+            margin-bottom: 2rem;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+        }
+        .form-group { 
+            margin-bottom: 1.5rem; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 0.5rem; 
+            font-weight: 500;
+            color: #495057;
+        }
+        input { 
+            width: 100%; 
+            padding: 0.8rem 1rem;
+            border: 1px solid #ced4da; 
+            border-radius: 8px;
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: rgba(255,255,255,0.8);
+        }
+        input:focus {
+            outline: none;
+            border-color: #80bdff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+        button { 
+            width: 100%; 
+            padding: 0.9rem; 
+            background-color: #007bff;
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer; 
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+        button:hover { 
+            background-color: #0069d9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 123, 255, 0.3);
+        }
+        #status { 
+            margin-top: 1.5rem; 
+            text-align: center; 
+            font-weight: 500;
+            padding: 0.8rem;
+            border-radius: 8px;
+            display: none;
+        }
+        #status.success {
+            background-color: rgba(212, 237, 218, 0.9);
+            color: #155724;
+            display: block;
+        }
+        #status.error {
+            background-color: rgba(248, 215, 218, 0.9);
+            color: #721c24;
+            display: block;
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- --- MODIFIED --- Added loader HTML block --- -->
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- --- MODIFIED --- Wrapped page content in main-content div --- -->
+    <div class="main-content">
+        <a href="https://github.com/shaoyouvip/Rewards" target="_blank" class="github-corner" aria-label="View source on GitHub">
+            <svg viewBox="0 0 250 250" aria-hidden="true">
+                <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+                <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+                <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
+            </svg>
+        </a>
+
+        <div class="container">
+            <h1>提交新的赞赏</h1>
+            <form id="rewardForm">
+                <div class="form-group">
+                    <label for="name">赞赏者名字</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="money">金额</label>
+                    <input type="number" id="money" name="money" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="time">提交时间 (可选)</label>
+                    <input type="datetime-local" id="time" name="time">
+                </div>
+
+                <div class="form-group">
+                    <label for="secret">提交密码</label>
+                    <input type="password" id="secret" name="secret" required>
+                </div>
+                <button type="submit">提交</button>
+            </form>
+            <p id="status"></p>
+        </div>
+    </div>
+
+    <script>
+        (async function() {
+            try {
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    const config = await response.json();
+                    if (config.backgroundImageUrl) {
+                        document.body.style.backgroundImage = `url(${config.backgroundImageUrl})`;
+                    }
+                    if (config.favicon) {
+                        document.getElementById('favicon').href = config.favicon;
+                    }
+                }
+            } catch (error) {
+                console.error("无法加载背景配置:", error);
+            } finally {
+                // --- MODIFIED --- Add 'loaded' class to body to trigger fade-in ---
+                document.body.classList.add('loaded');
+            }
+        })();
+
+        document.getElementById('rewardForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const statusEl = document.getElementById('status');
+            const apiUrl = '/api/rewards';
+
+            const name = document.getElementById('name').value;
+            const money = document.getElementById('money').value;
+            const secret = document.getElementById('secret').value;
+            const time = document.getElementById('time').value;
+
+            statusEl.textContent = '提交中...';
+            statusEl.className = '';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, money, secret, time })
+                });
+
+                if (response.ok) {
+                    statusEl.textContent = '提交成功!';
+                    statusEl.className = 'success';
+                    document.getElementById('name').value = '';
+                    document.getElementById('money').value = '';
+                } else {
+                    const errorText = await response.text();
+                    statusEl.textContent = `提交失败: ${errorText}`;
+                    statusEl.className = 'error';
+                }
+            } catch (error) {
+                statusEl.textContent = `网络错误: ${error.message}`;
+                statusEl.className = 'error';
+            }
+        });
+    </script>
+</body>
+</html>

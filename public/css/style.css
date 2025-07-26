@@ -1,0 +1,319 @@
+/* --- 全局样式 --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* --- 【已优化】使用 Flexbox 实现粘性页脚 --- */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f7f8fa;
+    color: #333;
+    margin: 0;
+    padding: 2rem 1rem;
+    -webkit-text-size-adjust: 100%;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+
+    /* 新增样式 */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* 确保 body 至少和视口一样高 */
+}
+
+/* --- 加载动画样式 --- */
+#loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f7f8fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #d24a41;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+body.loaded #loader-overlay {
+    opacity: 0;
+    visibility: hidden;
+}
+.main-content {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+body.loaded .main-content {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* --- GitHub 角标样式 --- */
+.github-corner {
+    position: fixed;
+    top: 0;
+    right: 0;
+    border: 0;
+    width: 80px;
+    height: 80px;
+    z-index: 999;
+}
+.github-corner svg {
+    fill: #007bff;
+    color: #fff;
+}
+.github-corner:hover .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+}
+@keyframes octocat-wave {
+    0%, 100% { transform: rotate(0); }
+    20%, 60% { transform: rotate(-25deg); }
+    40%, 80% { transform: rotate(10deg); }
+}
+
+/* --- 【已优化】主内容包裹器 --- */
+.main-content {
+    max-width: 800px;
+    width: 100%; /* 确保在小屏上宽度正确 */
+    margin: auto; /* 修改为 auto 以实现垂直水平居中 */
+}
+
+/* --- 横幅样式 --- */
+.banner {
+    text-align: center;
+    /* Removed padding to let the inner box control spacing */
+}
+
+.banner-box {
+    background-color: rgba(247, 248, 250, 0.7);
+    border: 1px solid rgba(229, 231, 235, 0.7);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+}
+
+.banner h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #d24a41;
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.banner p {
+    font-size: 1rem;
+    color: #333;
+    opacity: 0.8;
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+}
+
+/* --- 主容器 - 高斯模糊效果 --- */
+.container {
+    background-color: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    /* --- MODIFIED --- Added margin to create space between banner and container */
+    margin-top: 2rem;
+}
+
+/* --- 二维码区域 --- */
+.qr-section {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+    padding-bottom: 0; /* Adjusted for better spacing */
+    background-color: transparent;
+}
+.qr-code {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #555;
+}
+.qr-code img {
+    width: 140px;
+    height: 140px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 0.5rem;
+}
+
+/* --- 列表区域 --- */
+.rewards-list {
+    padding: 1rem 2rem 2rem 2rem;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* --- 表格样式 --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 1rem 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(240, 240, 240, 0.7);
+}
+thead th {
+    font-weight: 600;
+    color: #555;
+    background-color: rgba(250, 250, 250, 0.5);
+}
+tbody tr:last-child td {
+    border-bottom: none;
+}
+td:nth-child(2) { text-align: right; }
+td:nth-child(3) { text-align: right; color: #888; }
+
+/* --- 高亮样式 --- */
+.highlight {
+    background-color: rgba(254, 226, 226, 0.7);
+}
+.highlight td:nth-child(2) {
+    font-weight: bold;
+    color: #ef4444;
+}
+.highlight-secondary {
+    background-color: rgba(255, 251, 235, 0.7);
+}
+.highlight-secondary td:nth-child(2) {
+    font-weight: bold;
+    color: #d97706;
+}
+
+/* --- 分页 --- */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 2rem 1rem 2rem;
+    gap: 0.5rem;
+}
+.pagination button {
+    background-color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(221, 221, 221, 0.8);
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.pagination button:hover:not(:disabled) {
+    background-color: rgba(247, 247, 247, 0.9);
+}
+.pagination button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+.pagination .page-info {
+    font-size: 0.9rem;
+    color: #888;
+    padding: 0 0.5rem;
+}
+.pagination .mobile-text {
+    display: none;
+}
+
+/* --- 页脚样式 --- */
+.footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.info-box {
+    background-color: rgba(247, 248, 250, 0.7);
+    border: 1px solid rgba(229, 231, 235, 0.7);
+    border-radius: 12px;
+    padding: 0.5rem 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #888;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.copyright {
+    color: #9ca3af;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+.copyright a {
+    color: #9ca3af;
+    font-weight: 600;
+    text-decoration: none;
+    margin: 0 0.25rem;
+}
+.copyright a:hover {
+    color: #3b82f6;
+}
+
+/* --- 移动端响应式样式 --- */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem 0.5rem;
+    }
+    .banner-box {
+        padding: 1.5rem 1rem;
+    }
+    .banner h1 {
+        font-size: 1.5rem;
+    }
+    .container {
+        margin-top: 1.5rem;
+    }
+    .rewards-list {
+        padding: 1rem;
+    }
+    .pagination {
+        padding: 1.5rem 1rem;
+    }
+    th, td {
+        padding: 0.8rem 0.25rem;
+    }
+    .pagination .desktop-text {
+        display: none;
+    }
+    .pagination .mobile-text {
+        display: inline;
+    }
+    .pagination button {
+        padding: 0.5rem 0.75rem;
+    }
+    .pagination {
+        gap: 0.25rem;
+    }
+    .footer {
+        margin-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+    .info-box {
+        font-size: 0.8rem;
+    }
+}

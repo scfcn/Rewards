@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加载中...</title> 
+    <link id="favicon" rel="icon" type="image/webp" href="">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- 加载动画 -->
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- GitHub SVG 角标 -->
+    <a href="https://github.com/shaoyouvip/Rewards" target="_blank" class="github-corner" aria-label="View source on GitHub">
+        <svg viewBox="0 0 250 250" aria-hidden="true">
+            <path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
+            <path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path>
+            <path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path>
+        </svg>
+    </a>
+
+    <div class="main-content">
+        
+        <!-- --- MODIFIED --- Banner is now a sibling to .container, not a child -->
+        <div class="banner">
+            <div class="banner-box">
+                <h1 id="page-title-h1"></h1>
+                <p id="banner-title-p"></p>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Banner was here -->
+
+            <!-- 2. 二维码 -->
+            <div class="qr-section">
+                <div class="qr-code">
+                    <img id="wechat-qr" src="" alt="微信扫一扫">
+                    <p>微信扫一扫</p>
+                </div>
+                <div class="qr-code">
+                    <img id="alipay-qr" src="" alt="支付宝扫一扫">
+                    <p>支付宝扫一扫</p>
+                </div>
+            </div>
+            
+            <!-- 3. 赞赏列表 -->
+            <div class="rewards-list">
+                <div class="list-header">
+                    <span>按日期排序</span>
+                    <span id="total-amount"></span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>昵称</th>
+                            <th style="text-align: right;">金额</th>
+                            <th style="text-align: right;">时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rewards-table-body"></tbody>
+                </table>
+            </div>
+
+            <!-- 4. 分页 -->
+            <div class="pagination" id="pagination-controls" style="display: none;">
+                <button id="first-page"><span class="desktop-text">首页</span><span class="mobile-text">«</span></button>
+                <button id="prev-page"><span class="desktop-text">上一页</span><span class="mobile-text">‹</span></button>
+                <span class="page-info" id="page-info"></span>
+                <button id="next-page"><span class="desktop-text">下一页</span><span class="mobile-text">›</span></button>
+                <button id="last-page"><span class="desktop-text">尾页</span><span class="mobile-text">»</span></button>
+            </div>
+
+        </div> <!-- .container 结束 -->
+        
+        <footer class="footer">
+            <div class="info-box">
+                <p id="info-box-text"></p>
+            </div>
+            <p id="copyright-footer" class="copyright"></p>
+        </footer>
+
+    </div> <!-- .main-content 结束 -->
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            let config;
+            let allRewards = [];
+            let currentPage = 1;
+            let totalPages = 1;
+            const tableBody = document.getElementById('rewards-table-body');
+            const totalAmountEl = document.getElementById('total-amount');
+            const paginationControls = document.getElementById('pagination-controls');
+            const pageInfo = document.getElementById('page-info');
+            const firstPageBtn = document.getElementById('first-page');
+            const prevPageBtn = document.getElementById('prev-page');
+            const nextPageBtn = document.getElementById('next-page');
+            const lastPageBtn = document.getElementById('last-page');
+
+            async function fetchConfigAndInitialize() {
+                try {
+                    const response = await fetch('/api/config');
+                    if (!response.ok) throw new Error('无法加载远程配置');
+                    config = await response.json();
+                    applyConfig();
+                    await fetchRewards();
+                    document.body.classList.add('loaded');
+                } catch (error) {
+                    console.error('初始化失败:', error);
+                    const loader = document.getElementById('loader-overlay');
+                    if(loader) loader.remove();
+                    document.body.innerHTML = '<div style="text-align:center;padding:4rem;">页面初始化失败，请检查您的Cloudflare环境变量配置是否正确并已重新部署。</div>';
+                }
+            }
+            
+            function applyConfig() {
+                if (config.backgroundImageUrl) {
+                    document.body.style.backgroundImage = `url(${config.backgroundImageUrl})`;
+                }
+                document.title = config.pageTitle;
+                document.getElementById('favicon').href = config.favicon;
+                document.getElementById('page-title-h1').textContent = config.pageTitle;
+                document.getElementById('banner-title-p').textContent = config.bannerTitle;
+                document.getElementById('wechat-qr').src = config.qrCodes.wechat;
+                document.getElementById('alipay-qr').src = config.qrCodes.alipay;
+                const infoBoxText = document.getElementById('info-box-text');
+                infoBoxText.innerHTML = `${config.infoBox.text} <a href="mailto:${config.infoBox.email}" style="color:#3b82f6; text-decoration:none; font-weight:600;">${config.infoBox.email}</a> 仅展示¥1以上的赞赏`;
+                document.getElementById('copyright-footer').innerHTML = config.footerHTML;
+            }
+            
+            async function fetchRewards() {
+                tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;">正在加载数据...</td></tr>`;
+                try {
+                    const response = await fetch('/api/rewards');
+                    if (!response.ok) throw new Error('网络响应错误');
+                    const result = await response.json();
+                    allRewards = result.data;
+                    calculateTotalAmount();
+                    renderPage(1);
+                    setupPagination();
+                } catch (error) {
+                    console.error('获取赞赏数据失败:', error);
+                    tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;">加载失败, 请稍后再试</td></tr>`;
+                }
+            }
+            
+            function renderPage(page) {
+                currentPage = page;
+                tableBody.innerHTML = '';
+                if (allRewards.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;">暂无赞赏记录</td></tr>`;
+                    return;
+                }
+                const startIndex = (currentPage - 1) * config.pagination.rowsPerPage;
+                const endIndex = startIndex + config.pagination.rowsPerPage;
+                const paginatedRewards = allRewards.slice(startIndex, endIndex);
+                paginatedRewards.forEach(item => {
+                    const row = document.createElement('tr');
+                    if (item.money >= config.highlightTiers.primary) {
+                        row.classList.add('highlight');
+                    } else if (item.money >= config.highlightTiers.secondary) {
+                        row.classList.add('highlight-secondary');
+                    }
+                    const formattedDate = formatDate(item.date);
+                    const formattedMoney = item.money.toFixed(2);
+                    row.innerHTML = `<td>${item.name}</td><td style="text-align: right;">${formattedMoney}元</td><td style="text-align: right;">${formattedDate}</td>`;
+                    tableBody.appendChild(row);
+                });
+                updatePaginationButtons();
+            }
+
+            function calculateTotalAmount() {
+                const total = allRewards.reduce((sum, item) => sum + item.money, 0);
+                totalAmountEl.textContent = `总金额: ${total.toFixed(2)}元`;
+            }
+
+            function formatDate(isoString) {
+                const date = new Date(isoString);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return (year === new Date().getFullYear()) ? `${month}-${day}` : `${year}-${month}-${day}`;
+            }
+
+            function setupPagination() {
+                totalPages = Math.ceil(allRewards.length / config.pagination.rowsPerPage);
+                if (totalPages > 1) {
+                    paginationControls.style.display = 'flex';
+                    updatePaginationButtons();
+                    firstPageBtn.addEventListener('click', () => renderPage(1));
+                    prevPageBtn.addEventListener('click', () => renderPage(Math.max(1, currentPage - 1)));
+                    nextPageBtn.addEventListener('click', () => renderPage(Math.min(totalPages, currentPage + 1)));
+                    lastPageBtn.addEventListener('click', () => renderPage(totalPages));
+                } else {
+                    paginationControls.style.display = 'none';
+                }
+            }
+
+            function updatePaginationButtons() {
+                if (totalPages <= 1) return;
+                pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
+                firstPageBtn.disabled = prevPageBtn.disabled = (currentPage === 1);
+                lastPageBtn.disabled = nextPageBtn.disabled = (currentPage === totalPages);
+            }
+            
+            fetchConfigAndInitialize();
+        });
+    </script>
+</body>
+</html>
