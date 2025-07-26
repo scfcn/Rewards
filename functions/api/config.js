@@ -4,7 +4,7 @@ export async function onRequest(context) {
   const config = {
     backgroundImageUrl: env.CONFIG_BACKGROUND_IMAGE_URL || "/img/bj.webp", 
     // --- MODIFIED --- Changed the default page title
-    pageTitle: env.CONFIG_PAGE_TITLE || "周润发的赞赏页面",
+    pageTitle: env.CONFIG_PAGE_TITLE || "赞赏页面",
     favicon: env.CONFIG_FAVICON || "/img/icon.webp",
     // --- MODIFIED --- Changed the default banner title to match the screenshot
     bannerTitle: env.CONFIG_BANNER_TITLE || "您的赞赏，是我的续命咖啡~",
