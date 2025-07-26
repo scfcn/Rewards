@@ -1,7 +1,7 @@
 # Rewards - 一个高度可定制的赞赏展示页
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/shaoyouvip/rewards?style=social)](https://github.com/shaoyouvip/Rewards)
+[![GitHub Stars](https://img.shields.io/github/stars/shaoyouvip/Rewards?style=social)](https://github.com/shaoyouvip/Rewards)
 
 这是一个基于 Cloudflare Pages 和 KV 存储构建的、轻量级、高度可定制的赞赏记录展示页面。它允许您轻松地展示收到的赞赏，并通过环境变量进行全方位的个性化配置，无需修改任何代码。
 
@@ -23,17 +23,19 @@
 
 ## 部署指南
 
-部署这个项目非常简单，整个过程大概只需要5分钟。
+### 一键部署 (推荐)
 
-### 准备工作
-1.  一个 [GitHub](https://github.com/) 账户。
-2.  一个 [Cloudflare](https://dash.cloudflare.com/) 账户。
+点击下方的按钮，即可将此项目一键部署到您自己的 Cloudflare 账户，过程非常简单。
 
-### 部署步骤
+[![Deploy to Cloudflare Pages](https://static.cloudflarebadges.com/deploy-to-cloudflare-pages.svg)](https://deploy.cloudflare.com/?url=https://github.com/shaoyouvip/Rewards)
 
-**第一步：Fork 本项目**
+在部署向导中，系统会引导您授权、Fork仓库并设置KV，请按照提示操作即可。
 
-点击本项目页面右上角的 **Fork** 按钮，将此项目复制到您自己的 GitHub 仓库中。
+### 手动部署
+
+**第一步：获取代码**
+
+点击本项目页面右上角的 **Fork** 按钮，或使用 **Use this template**，将此项目复制到您自己的 GitHub 仓库中。
 
 **第二步：创建 KV 命名空间**
 
@@ -44,10 +46,13 @@
 
 **第三步：在 Cloudflare Pages 中创建项目**
 
-1.  在 Cloudflare 仪表板中，进入 **Workers 和 Pages**，然后选择 **Pages** 选项卡。
+1.  在 Cloudflare 仪表板中，进入 **Workers 和 Pages** -> **Pages** 选项卡。
 2.  点击 **创建项目** -> **连接到 Git**。
-3.  选择您刚刚 Fork 的 GitHub 仓库。
-4.  在“设置构建和部署”页面，**无需**选择任何框架预设，直接点击“**保存并部署**”即可。
+3.  选择您刚刚创建的 GitHub 仓库。
+4.  在“**设置构建和部署**”页面，填写以下信息：
+    *   **构建命令 (Build command)**:  (**留空**，不需要任何命令)
+    *   **构建输出目录 (Build output directory)**:  `public`
+    *   点击“**保存并部署**”。
 
 **第四步：绑定 KV 和设置环境变量**
 
@@ -91,8 +96,8 @@
 
 部署完成后，您可以：
 
--   通过访问 `https://你的项目地址` 来查看赞赏页面。
--   通过访问 `https://你的项目地址/admin.html` 来提交新的赞赏记录。在提交时，需要输入您在环境变量 `FORM_SECRET` 中设置的密码。
+-   通过访问 `https://你的项目地址.pages.dev` 来查看赞赏页面。
+-   通过访问 `https://你的项目地址.pages.dev/admin.html` 来提交新的赞赏记录。在提交时，需要输入您在环境变量 `FORM_SECRET` 中设置的密码。
 
 
 ## 📄 许可证
