@@ -23,15 +23,7 @@
 
 ## 部署指南
 
-### 一键部署 (推荐)
-
-点击下方的按钮，即可将此项目一键部署到您自己的 Cloudflare 账户，过程非常简单。
-
-[![Deploy to Cloudflare Pages](https://static.cloudflarebadges.com/deploy-to-cloudflare-pages.svg)](https://deploy.cloudflare.com/?url=https://github.com/shaoyouvip/Rewards)
-
-在部署向导中，系统会引导您授权、Fork仓库并设置KV，请按照提示操作即可。
-
-### 手动部署
+### 部署教程
 
 **第一步：获取代码**
 
@@ -78,14 +70,14 @@
 | 变量名称                        | 说明                                                              | 默认值                          |
 | ------------------------------- | ----------------------------------------------------------------- | ------------------------------- |
 | `FORM_SECRET`                   | **（必需）** 访问 `/admin.html` 页面提交记录时所需的密码。      | *无*                            |
-| `CONFIG_PAGE_TITLE`             | 浏览器标签页上显示的标题。                                        | `周润发的赞赏页面`              |
+| `CONFIG_PAGE_TITLE`             | **（必需）** 浏览器标签页上显示的标题。                                        | `周润发的赞赏页面`              |
 | `CONFIG_BANNER_TITLE`           | 页面顶部大标题下的副标题。                                        | `您的赞赏，是我的续命咖啡~`       |
 | `CONFIG_BACKGROUND_IMAGE_URL`   | 整个页面的背景图片链接。                                          | `/img/bj.webp` (项目内图片)       |
 | `CONFIG_FAVICON`                | 浏览器标签页上显示的图标链接。                                    | `/img/icon.webp` (项目内图片)     |
-| `CONFIG_QR_WECHAT`              | 微信收款二维码图片链接。                                          | `/img/zsm_wx.webp` (项目内图片)   |
-| `CONFIG_QR_ALIPAY`              | 支付宝收款二维码图片链接。                                        | `/img/zsm_zfb.webp` (项目内图片)  |
+| `CONFIG_QR_WECHAT`              | **（必需）** 微信收款二维码图片链接。                                          | `/img/zsm_wx.webp` (项目内图片)   |
+| `CONFIG_QR_ALIPAY`              | **（必需）** 支付宝收款二维码图片链接。                                        | `/img/zsm_zfb.webp` (项目内图片)  |
 | `CONFIG_INFO_TEXT`              | 页面底部信息框中的提示文字。                                      | `如需修改昵称信息...`           |
-| `CONFIG_INFO_EMAIL`             | 页面底部信息框中显示的联系邮箱。                                  | `zrf@zrf.me`        |
+| `CONFIG_INFO_EMAIL`             | **（必需）** 页面底部信息框中显示的联系邮箱。                                  | `zrf@zrf.me`        |
 | `CONFIG_FOOTER_HTML`            | 最底部的版权信息，支持 HTML。                                     | `周润发: <a href="https://d.zrf.me/blog">博客</a>` |
 | `CONFIG_ROWS_PER_PAGE`          | 每页显示的赞赏记录数量。                                          | `10`                            |
 | `CONFIG_HIGHLIGHT_PRIMARY`      | 主要高亮（红色）的金额门槛。                                      | `100`                           |
