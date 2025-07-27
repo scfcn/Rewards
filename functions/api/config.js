@@ -1,35 +1,64 @@
 export async function onRequest(context) {
-  const { env } = context;
-
-  const config = {
-    backgroundImageUrl: env.CONFIG_BACKGROUND_IMAGE_URL || "/img/bj.webp", 
-    // --- MODIFIED --- Changed the default page title
-    pageTitle: env.CONFIG_PAGE_TITLE || "赞赏页面",
-    favicon: env.CONFIG_FAVICON || "/img/icon.webp",
-    // --- MODIFIED --- Changed the default banner title to match the screenshot
-    bannerTitle: env.CONFIG_BANNER_TITLE || "您的赞赏，是我的续命咖啡~",
-    qrCodes: {
-      wechat: env.CONFIG_QR_WECHAT || "/img/zsm_wx.webp",
-      alipay: env.CONFIG_QR_ALIPAY || "/img/zsm_zfb.webp",
-    },
-    infoBox: {
-      text: env.CONFIG_INFO_TEXT || "如需修改昵称信息，您可以将您的赞赏截图和转账单号/支付单号和修改昵称发送到",
-      email: env.CONFIG_INFO_EMAIL || "zrf@zrf.me",
-    },
-    footerHTML: env.CONFIG_FOOTER_HTML || `周润发: <a href="https://d.zrf.me/blog">博客</a>`,
-    pagination: {
-      rowsPerPage: parseInt(env.CONFIG_ROWS_PER_PAGE, 10) || 10,
-    },
-    highlightTiers: {
-      primary: parseInt(env.CONFIG_HIGHLIGHT_PRIMARY, 10) || 100,
-      secondary: parseInt(env.CONFIG_HIGHLIGHT_SECONDARY, 10) || 20,
-    }
+  const { request, env } = context;
+  
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
   };
 
-  return new Response(JSON.stringify(config), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*'
-    },
-  });
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (request.method === 'GET') {
+    try {
+      const list = await env.REWARDS_KV.list();
+      const promises = list.keys.map(key => env.REWARDS_KV.get(key.name, { type: 'json' }));
+      let values = await Promise.all(promises);
+      values.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const responsePayload = { data: values };
+      return new Response(JSON.stringify(responsePayload), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    }
+  }
+
+  if (request.method === 'POST') {
+    try {
+      const { name, money, secret, time } = await request.json();
+      if (secret !== env.FORM_SECRET) {
+        return new Response('密码错误', { status: 403, headers: corsHeaders });
+      }
+      if (!name || !money) {
+        return new Response('姓名和金额不能为空', { status: 400, headers: corsHeaders });
+      }
+      
+      // --- 这里是唯一新增的内容 ---
+      const parsedMoney = parseFloat(money);
+      if (isNaN(parsedMoney) || parsedMoney < 1 || parsedMoney > 10000) {
+        return new Response('金额必须在1元至10000元之间', { status: 400, headers: corsHeaders });
+      }
+      // --- 新增内容结束 ---
+
+      let recordDate = time ? new Date(time + ':00+08:00') : new Date();
+      if (isNaN(recordDate.getTime())) {
+        return new Response('提供的日期时间格式无效', { status: 400, headers: corsHeaders });
+      }
+      const id = new Date().getTime().toString();
+      const record = {
+        name: name,
+        money: parsedMoney, // 这里使用了上面转换好的金额
+        date: recordDate.toISOString(),
+      };
+      await env.REWARDS_KV.put(id, JSON.stringify(record));
+      return new Response(JSON.stringify({ success: true, record }), { headers: corsHeaders });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
+    }
+  }
+
+  return new Response('Method Not Allowed', { status: 405 });
 }
