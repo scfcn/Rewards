@@ -4,10 +4,10 @@ export async function onRequest(context) {
   const config = {
     backgroundImageUrl: env.CONFIG_BACKGROUND_IMAGE_URL || "https://bing.liushen.fun/api/daily/", 
     // --- MODIFIED --- Changed the default page title
-    pageTitle: env.CONFIG_PAGE_TITLE || "赞赏页面",
+    pageTitle: env.CONFIG_PAGE_TITLE || "筱序二十|打赏",
     favicon: env.CONFIG_FAVICON || "/img/favicon.ico",
     // --- MODIFIED --- Changed the default banner title to match the screenshot
-    bannerTitle: env.CONFIG_BANNER_TITLE || "您的赞赏，是我的续命咖啡~",
+    bannerTitle: env.CONFIG_BANNER_TITLE || "定不负您的期望！",
     qrCodes: {
       wechat: env.CONFIG_QR_WECHAT || "/img/zsm_wx.png",
       alipay: env.CONFIG_QR_ALIPAY || "/img/zsm_zfb.jpg",
