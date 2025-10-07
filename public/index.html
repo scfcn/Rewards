@@ -3,13 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>加载中...</title> 
+    <title>加载中...</title>
+    <meta name="description" content="赞赏记录展示页面">
+    <meta name="author" content="Rewards App">
     <link id="favicon" rel="icon" type="image/webp" href="">
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 
     <!-- 加载动画 -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中...</div>
+    </div>
+    
+    <!-- 旧的加载层（保持兼容） -->
     <div id="loader-overlay">
         <div class="spinner"></div>
     </div>
@@ -25,15 +33,15 @@
 
     <div class="main-content">
         
-        <!-- --- MODIFIED --- Banner is now a sibling to .container, not a child -->
+        <!-- Banner区域 -->
         <div class="banner">
             <div class="banner-box">
-                <h1 id="page-title-h1"></h1>
-                <p id="banner-title-p"></p>
+                <h1 id="page-title-h1" class="banner-title"></h1>
+                <p id="banner-title-p" class="banner-subtitle"></p>
             </div>
         </div>
 
-        <div class="container">
+        <div class="container" role="main">
             <!-- Banner was here -->
 
             <!-- 2. 二维码 -->
@@ -51,35 +59,37 @@
             <!-- 3. 赞赏列表 -->
             <div class="rewards-list">
                 <div class="list-header">
-                    <span>按日期排序</span>
-                    <span id="total-amount"></span>
+                    <span class="sort-label">按日期排序</span>
+                    <span id="total-amount" class="total-amount"></span>
                 </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>昵称</th>
-                            <th style="text-align: right;">金额</th>
-                            <th style="text-align: right;">时间</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rewards-table-body"></tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="col-name">昵称</th>
+                                <th class="col-amount">金额</th>
+                                <th class="col-date">时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rewards-table-body"></tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- 4. 分页 -->
             <div class="pagination" id="pagination-controls" style="display: none;">
-                <button id="first-page"><span class="desktop-text">首页</span><span class="mobile-text">«</span></button>
-                <button id="prev-page"><span class="desktop-text">上一页</span><span class="mobile-text">‹</span></button>
+                <button id="first-page" class="pagination-btn"><span class="desktop-text">首页</span><span class="mobile-text">«</span></button>
+                <button id="prev-page" class="pagination-btn"><span class="desktop-text">上一页</span><span class="mobile-text">‹</span></button>
                 <span class="page-info" id="page-info"></span>
-                <button id="next-page"><span class="desktop-text">下一页</span><span class="mobile-text">›</span></button>
-                <button id="last-page"><span class="desktop-text">尾页</span><span class="mobile-text">»</span></button>
+                <button id="next-page" class="pagination-btn"><span class="desktop-text">下一页</span><span class="mobile-text">›</span></button>
+                <button id="last-page" class="pagination-btn"><span class="desktop-text">尾页</span><span class="mobile-text">»</span></button>
             </div>
 
         </div> <!-- .container 结束 -->
         
-        <footer class="footer">
+        <footer class="footer" role="contentinfo">
             <div class="info-box">
-                <p id="info-box-text"></p>
+                <p id="info-box-text" class="info-text"></p>
             </div>
             <p id="copyright-footer" class="copyright"></p>
         </footer>
@@ -101,22 +111,222 @@
             const nextPageBtn = document.getElementById('next-page');
             const lastPageBtn = document.getElementById('last-page');
 
+            // 初始化页面
             async function fetchConfigAndInitialize() {
                 try {
+                    // 显示加载动画
+                    document.getElementById('loading').style.display = 'flex';
+                    
+                    // 尝试获取远程配置
                     const response = await fetch('/api/config');
-                    if (!response.ok) throw new Error('无法加载远程配置');
+                    
+                    // 检查响应状态
+                    if (!response.ok) {
+                        throw new Error(`配置API响应错误: ${response.status}`);
+                    }
+                    
+                    // 确保响应是JSON格式
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('配置响应不是有效的JSON格式');
+                    }
+                    
+                    // 解析配置
                     config = await response.json();
+                    
+                    // 验证配置完整性
+                    if (!config) {
+                        throw new Error('配置为空');
+                    }
+                    
+                    // 应用配置并加载数据
                     applyConfig();
-                    await fetchRewards();
-                    document.body.classList.add('loaded');
+                    
+                    // 尝试加载赞赏数据，如果失败则使用模拟数据
+                    try {
+                        await fetchRewards();
+                    } catch (rewardsError) {
+                        console.warn('赞赏数据加载失败，使用模拟数据:', rewardsError);
+                        showMockData();
+                        showNotification('使用模拟赞赏数据', 'info');
+                    }
                 } catch (error) {
                     console.error('初始化失败:', error);
-                    const loader = document.getElementById('loader-overlay');
-                    if(loader) loader.remove();
-                    document.body.innerHTML = '<div style="text-align:center;padding:4rem;">页面初始化失败，请检查您的Cloudflare环境变量配置是否正确并已重新部署。</div>';
+                    
+                    // 使用默认配置作为后备
+                    try {
+                        console.log('使用默认配置作为后备');
+                        
+                        // 设置默认配置
+                        config = {
+                            pageTitle: '赞赏列表',
+                            bannerTitle: '感谢您的支持',
+                            favicon: '',
+                            backgroundImageUrl: '',
+                            qrCodes: {
+                                wechat: '',
+                                alipay: ''
+                            },
+                            infoBox: {
+                                text: '感谢您的支持',
+                                email: 'example@domain.com'
+                            },
+                            footerHTML: '© ' + new Date().getFullYear() + ' 赞赏系统',
+                            highlightTiers: {
+                                primary: 100,
+                                secondary: 50
+                            },
+                            pagination: {
+                                rowsPerPage: 10
+                            }
+                        };
+                        
+                        // 应用默认配置
+                        applyConfig();
+                        
+                        // 显示模拟数据
+                        showMockData();
+                        
+                        // 显示警告信息
+                        showNotification('使用默认配置和模拟数据', 'warning');
+                    } catch (fallbackError) {
+                        console.error('默认配置初始化失败:', fallbackError);
+                        showNotification('页面初始化失败', 'error');
+                        return;
+                    }
+                } finally {
+                    // 隐藏加载动画
+                    setTimeout(() => {
+                        document.getElementById('loading').style.display = 'none';
+                        document.body.classList.add('loaded');
+                    }, 500); // 延迟隐藏，确保动画效果正常显示
                 }
             }
             
+            // 显示通知消息
+            function showNotification(message, type = 'info') {
+                // 检查是否存在现有的通知容器
+                let notificationContainer = document.getElementById('notification-container');
+                if (!notificationContainer) {
+                    // 创建通知容器
+                    notificationContainer = document.createElement('div');
+                    notificationContainer.id = 'notification-container';
+                    notificationContainer.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        z-index: 1000;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 10px;
+                    `;
+                    document.body.appendChild(notificationContainer);
+                }
+                
+                // 创建通知元素
+                const notification = document.createElement('div');
+                
+                // 设置样式基于类型
+                let bgColor, textColor, icon;
+                switch (type) {
+                    case 'success':
+                        bgColor = 'var(--success-color)';
+                        textColor = 'white';
+                        icon = '✓';
+                        break;
+                    case 'error':
+                        bgColor = 'var(--error-color)';
+                        textColor = 'white';
+                        icon = '✗';
+                        break;
+                    case 'warning':
+                        bgColor = 'var(--warning-color)';
+                        textColor = 'white';
+                        icon = '!';
+                        break;
+                    default:
+                        bgColor = 'var(--info-color)';
+                        textColor = 'white';
+                        icon = 'i';
+                }
+                
+                // 应用样式
+                notification.style.cssText = `
+                    background-color: ${bgColor};
+                    color: ${textColor};
+                    padding: 12px 20px;
+                    border-radius: var(--border-radius-md);
+                    box-shadow: var(--shadow-md);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-weight: 500;
+                    animation: slideInRight 0.3s ease-out;
+                    transform: translateX(100%);
+                `;
+                
+                // 设置内容
+                notification.innerHTML = `
+                    <span style="font-size: 1.2em; font-weight: bold;">${icon}</span>
+                    <span>${message}</span>
+                    <button style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        cursor: pointer;
+                        font-size: 1.2em;
+                        margin-left: auto;
+                    ">&times;</button>
+                `;
+                
+                // 添加到容器
+                notificationContainer.appendChild(notification);
+                
+                // 触发动画
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                }, 10);
+                
+                // 关闭按钮事件
+                notification.querySelector('button').addEventListener('click', () => {
+                    closeNotification(notification);
+                });
+                
+                // 自动关闭
+                setTimeout(() => {
+                    closeNotification(notification);
+                }, 5000);
+                
+                // 关闭通知的函数
+                function closeNotification(elem) {
+                    elem.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
+                    elem.style.transform = 'translateX(100%)';
+                    elem.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        if (notificationContainer.contains(elem)) {
+                            notificationContainer.removeChild(elem);
+                        }
+                    }, 300);
+                }
+            }
+            
+            // 显示模拟数据以便在API不可用时展示界面
+            function showMockData() {
+                allRewards = [
+                    { name: '张三', money: 100, date: new Date().toISOString() },
+                    { name: '李四', money: 50, date: new Date(Date.now() - 86400000).toISOString() },
+                    { name: '王五', money: 200, date: new Date(Date.now() - 172800000).toISOString() },
+                    { name: '赵六', money: 30, date: new Date(Date.now() - 259200000).toISOString() },
+                    { name: '钱七', money: 150, date: new Date(Date.now() - 345600000).toISOString() }
+                ];
+                
+                calculateTotalAmount();
+                renderPage(1);
+                setupPagination();
+            }
+            
+            // 应用配置到页面元素
             function applyConfig() {
                 if (config.backgroundImageUrl) {
                     document.body.style.backgroundImage = `url(${config.backgroundImageUrl})`;
@@ -127,13 +337,18 @@
                 document.getElementById('banner-title-p').textContent = config.bannerTitle;
                 document.getElementById('wechat-qr').src = config.qrCodes.wechat;
                 document.getElementById('alipay-qr').src = config.qrCodes.alipay;
+                
+                // 设置联系信息，使用CSS变量替代硬编码颜色
                 const infoBoxText = document.getElementById('info-box-text');
-                infoBoxText.innerHTML = `${config.infoBox.text} <a href="mailto:${config.infoBox.email}" style="color:#3b82f6; text-decoration:none; font-weight:600;">${config.infoBox.email}</a> 仅展示¥1以上的赞赏`;
+                infoBoxText.innerHTML = `${config.infoBox.text} <a href="mailto:${config.infoBox.email}" class="email-link">${config.infoBox.email}</a> 仅展示¥1以上的赞赏`;
+                
                 document.getElementById('copyright-footer').innerHTML = config.footerHTML;
             }
             
+            // 获取赞赏数据
             async function fetchRewards() {
-                tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;">正在加载数据...</td></tr>`;
+                // 显示加载状态
+                tableBody.innerHTML = `<tr class="loading-row"><td colspan="3" style="text-align:center;padding:2rem;"><div class="loading-spinner"></div><div class="loading-text">正在加载数据...</div></td></tr>`;
                 try {
                     const response = await fetch('/api/rewards');
                     if (!response.ok) throw new Error('网络响应错误');
@@ -144,40 +359,64 @@
                     setupPagination();
                 } catch (error) {
                     console.error('获取赞赏数据失败:', error);
-                    tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;">加载失败, 请稍后再试</td></tr>`;
+                    tableBody.innerHTML = `<tr class="error-row"><td colspan="3" style="text-align:center;padding:2rem;">加载失败, 请稍后再试</td></tr>`;
                 }
             }
             
+            // 渲染表格页面
             function renderPage(page) {
                 currentPage = page;
                 tableBody.innerHTML = '';
+                
                 if (allRewards.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;">暂无赞赏记录</td></tr>`;
+                    tableBody.innerHTML = `<tr class="empty-row"><td colspan="3" style="text-align:center;padding:2rem;">暂无赞赏记录</td></tr>`;
                     return;
                 }
+                
                 const startIndex = (currentPage - 1) * config.pagination.rowsPerPage;
                 const endIndex = startIndex + config.pagination.rowsPerPage;
                 const paginatedRewards = allRewards.slice(startIndex, endIndex);
-                paginatedRewards.forEach(item => {
-                    const row = document.createElement('tr');
-                    if (item.money >= config.highlightTiers.primary) {
-                        row.classList.add('highlight');
-                    } else if (item.money >= config.highlightTiers.secondary) {
-                        row.classList.add('highlight-secondary');
-                    }
-                    const formattedDate = formatDate(item.date);
-                    const formattedMoney = item.money.toFixed(2);
-                    row.innerHTML = `<td>${item.name}</td><td style="text-align: right;">${formattedMoney}元</td><td style="text-align: right;">${formattedDate}</td>`;
-                    tableBody.appendChild(row);
+                
+                // 添加淡入动画效果
+                paginatedRewards.forEach((item, index) => {
+                    setTimeout(() => {
+                        const row = document.createElement('tr');
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateY(10px)';
+                        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        
+                        if (item.money >= config.highlightTiers.primary) {
+                            row.classList.add('highlight');
+                        } else if (item.money >= config.highlightTiers.secondary) {
+                            row.classList.add('highlight-secondary');
+                        }
+                        
+                        const formattedDate = formatDate(item.date);
+                        const formattedMoney = item.money.toFixed(2);
+                        row.innerHTML = `<td>${item.name}</td><td class="amount-cell">${formattedMoney}元</td><td class="date-cell">${formattedDate}</td>`;
+                        tableBody.appendChild(row);
+                        
+                        // 触发动画
+                        setTimeout(() => {
+                            row.style.opacity = '1';
+                            row.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, index * 80); // 错开加载时间，形成连续动画效果
                 });
+                
                 updatePaginationButtons();
             }
 
+            // 计算总金额
             function calculateTotalAmount() {
                 const total = allRewards.reduce((sum, item) => sum + item.money, 0);
                 totalAmountEl.textContent = `总金额: ${total.toFixed(2)}元`;
+                
+                // 添加数字增长动画
+                animateValue(totalAmountEl, 0, total, 1000);
             }
 
+            // 日期格式化
             function formatDate(isoString) {
                 const date = new Date(isoString);
                 const year = date.getFullYear();
@@ -186,27 +425,81 @@
                 return (year === new Date().getFullYear()) ? `${month}-${day}` : `${year}-${month}-${day}`;
             }
 
+            // 设置分页控件
             function setupPagination() {
                 totalPages = Math.ceil(allRewards.length / config.pagination.rowsPerPage);
                 if (totalPages > 1) {
+                    // 添加过渡效果
                     paginationControls.style.display = 'flex';
+                    setTimeout(() => {
+                        paginationControls.style.opacity = '1';
+                    }, 10);
+                    
                     updatePaginationButtons();
-                    firstPageBtn.addEventListener('click', () => renderPage(1));
-                    prevPageBtn.addEventListener('click', () => renderPage(Math.max(1, currentPage - 1)));
-                    nextPageBtn.addEventListener('click', () => renderPage(Math.min(totalPages, currentPage + 1)));
-                    lastPageBtn.addEventListener('click', () => renderPage(totalPages));
+                    
+                    // 添加按钮事件监听，包含防抖处理
+                    firstPageBtn.addEventListener('click', debounce(() => renderPage(1), 200));
+                    prevPageBtn.addEventListener('click', debounce(() => renderPage(Math.max(1, currentPage - 1)), 200));
+                    nextPageBtn.addEventListener('click', debounce(() => renderPage(Math.min(totalPages, currentPage + 1)), 200));
+                    lastPageBtn.addEventListener('click', debounce(() => renderPage(totalPages), 200));
                 } else {
-                    paginationControls.style.display = 'none';
+                    paginationControls.style.opacity = '0';
+                    setTimeout(() => {
+                        paginationControls.style.display = 'none';
+                    }, 300);
                 }
             }
 
+            // 更新分页按钮状态
             function updatePaginationButtons() {
                 if (totalPages <= 1) return;
                 pageInfo.textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
-                firstPageBtn.disabled = prevPageBtn.disabled = (currentPage === 1);
-                lastPageBtn.disabled = nextPageBtn.disabled = (currentPage === totalPages);
+                
+                // 添加按钮状态变化动画
+                const updateButtonState = (btn, disabled) => {
+                    btn.disabled = disabled;
+                    if (disabled) {
+                        btn.classList.add('disabled');
+                    } else {
+                        btn.classList.remove('disabled');
+                    }
+                };
+                
+                updateButtonState(firstPageBtn, currentPage === 1);
+                updateButtonState(prevPageBtn, currentPage === 1);
+                updateButtonState(lastPageBtn, currentPage === totalPages);
+                updateButtonState(nextPageBtn, currentPage === totalPages);
             }
             
+            // 数字增长动画
+            function animateValue(element, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const currentValue = start + progress * (end - start);
+                    element.textContent = `总金额: ${currentValue.toFixed(2)}元`;
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+                window.requestAnimationFrame(step);
+            }
+            
+            // 防抖函数
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            // 初始化页面
             fetchConfigAndInitialize();
         });
     </script>

@@ -6,69 +6,120 @@
     <title>赞赏记录提交</title>
     <link id="favicon" rel="icon" type="image/webp" href="">
     <style>
-        *, *::before, *::after { box-sizing: border-box; }
+        /* 主题色彩系统 */
+        :root {
+            --primary-color: #d24a41;
+            --primary-dark: #b93d35;
+            --primary-light: #f8e0df;
+            --secondary-color: #f59e0b;
+            --secondary-dark: #d97706;
+            --secondary-light: #fef3c7;
+            --success-color: #10b981;
+            --success-light: #d1fae5;
+            --danger-color: #ef4444;
+            --danger-light: #fee2e2;
+            --info-color: #3b82f6;
+            --info-light: #dbeafe;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-light: #9ca3af;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-muted: #f3f4f6;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --border-radius-sm: 6px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --border-radius-xl: 16px;
+            --transition-base: all 0.3s ease;
+            --transition-fast: all 0.15s ease;
+        }
+
+        *, *::before, *::after { 
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background-color: #f8f9fa;
-            color: #212529; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-            padding: 1rem; 
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
             -webkit-text-size-adjust: 100%;
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        /* --- MODIFIED --- Added loader styles --- */
+        /* 加载动画样式 */
         #loader-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f7f8fa;
+            background-color: var(--bg-secondary);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 10000;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(0, 0, 0, 0.1);
-            border-top-color: #d24a41;
+            width: 60px;
+            height: 60px;
+            border: 5px solid var(--bg-muted);
+            border-top-color: var(--primary-color);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
+        
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
         }
+        
         body.loaded #loader-overlay {
             opacity: 0;
             visibility: hidden;
         }
+        
         .main-content {
             visibility: hidden;
             opacity: 0;
-            transition: opacity 0.5s ease;
-            width: 100%; /* Ensure wrapper takes width */
-            display: flex; /* Keep content centered */
+            transform: translateY(20px);
+            transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            display: flex;
             justify-content: center;
             align-items: center;
+            padding: 0 0.5rem;
+            position: relative;
+            z-index: 1;
         }
+        
         body.loaded .main-content {
             visibility: visible;
             opacity: 1;
+            transform: translateY(0);
         }
-        /* --- End of loader styles --- */
 
+        /* GitHub 角标样式 */
         .github-corner {
             position: fixed;
             top: 0;
@@ -77,101 +128,302 @@
             width: 80px;
             height: 80px;
             z-index: 999;
+            transition: transform 0.3s ease;
         }
+        
+        .github-corner:hover {
+            transform: scale(1.05);
+        }
+        
         .github-corner svg {
-            fill: #007bff;
+            fill: var(--info-color);
             color: #fff;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
         }
+        
         .github-corner:hover .octo-arm {
             animation: octocat-wave 560ms ease-in-out;
         }
+        
         @keyframes octocat-wave {
             0%, 100% { transform: rotate(0); }
             20%, 60% { transform: rotate(-25deg); }
             40%, 80% { transform: rotate(10deg); }
         }
+
+        /* 主容器样式 */
         .container { 
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 2.5rem; 
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 420px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 2.5rem;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 450px;
+            transition: var(--transition-base);
+            animation: fadeInUp 0.8s ease 0.3s both;
+            position: relative;
+            overflow: hidden;
         }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-5px);
+        }
+
+        /* 容器装饰元素 */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(210, 74, 65, 0.05) 0%, transparent 70%);
+            animation: rotateBackground 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes rotateBackground {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 表单内容层 */
+        .container > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 标题样式 */
         h1 { 
-            text-align: center; 
-            color: #343a40;
-            font-size: 1.75rem;
-            margin-bottom: 2rem;
-            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            line-height: 1.2;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
         }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        /* 表单组样式 */
         .form-group { 
-            margin-bottom: 1.5rem; 
+            margin-bottom: 1.75rem;
+            position: relative;
         }
+
+        /* 标签样式 */
         label { 
-            display: block; 
-            margin-bottom: 0.5rem; 
-            font-weight: 500;
-            color: #495057;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: var(--transition-fast);
         }
+
+        /* 输入框样式 */
         input { 
-            width: 100%; 
-            padding: 0.8rem 1rem;
-            border: 1px solid #ced4da; 
-            border-radius: 8px;
-            box-sizing: border-box; 
-            font-family: inherit; 
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            box-sizing: border-box;
+            font-family: inherit;
             font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background-color: rgba(255,255,255,0.8);
+            transition: var(--transition-base);
+            background-color: rgba(255,255,255,0.95);
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
         }
+
+        input::placeholder {
+            color: var(--text-light);
+        }
+
         input:focus {
             outline: none;
-            border-color: #80bdff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
-        }
-        button { 
-            width: 100%; 
-            padding: 0.9rem; 
-            background-color: #007bff;
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer; 
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-        }
-        button:hover { 
-            background-color: #0069d9;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px var(--primary-light);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 123, 255, 0.3);
         }
+
+        input:hover:not(:focus) {
+            border-color: var(--text-light);
+        }
+
+        /* 按钮样式 */
+        button { 
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-base);
+            box-shadow: 0 4px 12px rgba(210, 74, 65, 0.25);
+            position: relative;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover { 
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(210, 74, 65, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(210, 74, 65, 0.25);
+        }
+
+        /* 状态提示样式 */
         #status { 
-            margin-top: 1.5rem; 
-            text-align: center; 
-            font-weight: 500;
-            padding: 0.8rem;
-            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
             display: none;
+            transition: var(--transition-base);
+            border: 1px solid transparent;
         }
+
         #status.success {
-            background-color: rgba(212, 237, 218, 0.9);
-            color: #155724;
+            background-color: var(--success-light);
+            color: var(--success-color);
+            border-color: var(--success-color);
             display: block;
+            animation: slideIn 0.5s ease;
         }
+
         #status.error {
-            background-color: rgba(248, 215, 218, 0.9);
-            color: #721c24;
+            background-color: var(--danger-light);
+            color: var(--danger-color);
+            border-color: var(--danger-color);
             display: block;
+            animation: slideIn 0.5s ease;
         }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+                margin: 0 1rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+                margin-bottom: 2rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            input {
+                padding: 0.8rem 0.9rem;
+            }
+
+            button {
+                padding: 0.9rem;
+            }
+        }
+
         @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            .container {
+                padding: 1.75rem 1.5rem;
+                border-radius: var(--border-radius-lg);
+            }
+
             h1 {
                 font-size: 1.5rem;
+                margin-bottom: 1.75rem;
+            }
+
+            h1::after {
+                width: 40px;
+            }
+
+            .form-group {
+                margin-bottom: 1.25rem;
+            }
+
+            label {
+                font-size: 0.9rem;
+            }
+
+            input, button {
+                font-size: 0.95rem;
+            }
+
+            #status {
+                padding: 0.8rem;
+                font-size: 0.9rem;
             }
         }
     </style>
